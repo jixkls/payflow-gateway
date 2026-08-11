@@ -1,13 +1,16 @@
 import express, { type Express } from "express";
-import type { Pool } from "pg";
 import type { Environment } from "./config/env.js";
+
+type Database = {
+  query(sql: string): Promise<unknown>;
+};
 
 type AppDependencies = {
   env: Environment;
-  database: Pool;
+  database: Database;
 };
 
-export function createApp({ database }: AppDependencies): Express {
+export function createApp({ env, database }: AppDependencies): Express {
   const app = express();
 
   app.use(express.json());
@@ -17,6 +20,7 @@ export function createApp({ database }: AppDependencies): Express {
       status: "ok",
       service: "payflow-gateway",
       training: "git-conflict",
+      version: env.APP_VERSION,
     });
   });
 
