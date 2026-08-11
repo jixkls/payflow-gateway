@@ -1,10 +1,13 @@
 import express, { type Express } from "express";
-import type { Pool } from "pg";
 import type { Environment } from "./config/env.js";
+
+type Database = {
+  query(sql: string): Promise<unknown>;
+};
 
 type AppDependencies = {
   env: Environment;
-  database: Pool;
+  database: Database;
 };
 
 export function createApp({ env, database }: AppDependencies): Express {

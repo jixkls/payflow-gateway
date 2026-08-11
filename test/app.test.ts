@@ -12,7 +12,7 @@ const env: Environment = {
 describe("health endpoints", () => {
   it("reports that the service is available", async () => {
     const database = { query: vi.fn() };
-    const app = createApp({ env, database: database as never });
+    const app = createApp({ env, database });
 
     const response = await request(app).get("/health");
 
@@ -26,7 +26,7 @@ describe("health endpoints", () => {
 
   it("reports a successful database connection", async () => {
     const database = { query: vi.fn().mockResolvedValue({ rows: [] }) };
-    const app = createApp({ env, database: database as never });
+    const app = createApp({ env, database });
 
     const response = await request(app).get("/health/database");
 
@@ -36,7 +36,7 @@ describe("health endpoints", () => {
 
   it("reports an unavailable database", async () => {
     const database = { query: vi.fn().mockRejectedValue(new Error("offline")) };
-    const app = createApp({ env, database: database as never });
+    const app = createApp({ env, database });
 
     const response = await request(app).get("/health/database");
 
