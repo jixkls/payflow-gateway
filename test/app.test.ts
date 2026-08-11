@@ -20,6 +20,7 @@ describe("health endpoints", () => {
     expect(response.body).toEqual({
       status: "ok",
       service: "payflow-gateway",
+      version: "test",
     });
   });
 

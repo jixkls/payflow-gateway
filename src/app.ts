@@ -7,7 +7,7 @@ type AppDependencies = {
   database: Pool;
 };
 
-export function createApp({ database }: AppDependencies): Express {
+export function createApp({ env, database }: AppDependencies): Express {
   const app = express();
 
   app.use(express.json());
@@ -16,6 +16,7 @@ export function createApp({ database }: AppDependencies): Express {
     response.json({
       status: "ok",
       service: "payflow-gateway",
+      version: env.APP_VERSION,
     });
   });
 
