@@ -16,6 +16,7 @@ export function createApp({ database }: AppDependencies): Express {
     response.json({
       status: "ok",
       service: "payflow-gateway",
+      training: "git-conflict",
     });
   });
 
