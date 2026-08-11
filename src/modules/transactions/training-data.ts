@@ -30,3 +30,13 @@ export const transactions: Transaction[] = [
     customerEmail: "maria@email.com",
   },
 ];
+
+export function getPaidTransactions(): Transaction[] {
+  return transactions.filter((transaction) => transaction.status === "PAID");
+}
+
+export function getPaidTransactionIds(): string[] {
+  return transactions
+    .filter((transaction) => transaction.status === "PAID")
+    .map((transaction) => transaction.id);
+}
