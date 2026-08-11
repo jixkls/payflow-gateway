@@ -12,5 +12,9 @@ const merchants: Merchant[] = [
 export function getMerchantName(id: string): string {
   const merchant = merchants.find((item) => item.id === id);
 
+  if (!merchant) {
+    return "Lojista Desconhecido";
+  }
+
   return merchant.name;
 }
