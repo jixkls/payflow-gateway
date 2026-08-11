@@ -19,6 +19,7 @@ export function createApp({ env, database }: AppDependencies): Express {
     response.json({
       status: "ok",
       service: "payflow-gateway",
+      training: "git-conflict",
       version: env.APP_VERSION,
     });
   });
