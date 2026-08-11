@@ -3,4 +3,5 @@ export type Merchant = {
   name: string;
   email: string;
   active: boolean;
+  phone?: string;
 };
