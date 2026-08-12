@@ -40,3 +40,19 @@ export function getPaidTransactionIds(): string[] {
     .filter((transaction) => transaction.status === "PAID")
     .map((transaction) => transaction.id);
 }
+
+export function getPaidTransactionTotal(): number {
+  return transactions
+    .filter((transaction) => transaction.status === "PAID")
+    .reduce((total, transaction) => total + transaction.amount, 0);
+}
+
+export function getTransactionById(id: string): Transaction | undefined {
+  return transactions.find((transaction) => transaction.id === id);
+}
+
+export function getPaidTransactionsWithEmail(): Transaction[] {
+  return transactions
+    .filter((transaction) => transaction.status === "PAID")
+    .filter((transaction) => transaction.customerEmail !== null);
+}
