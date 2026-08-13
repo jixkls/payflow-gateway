@@ -1,3 +1,7 @@
--- Adiciona a coluna de e-mail do cliente (opcional) na tabela existente
-ALTER TABLE transactions
-  ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255) NULL;
+CREATE TABLE IF NOT EXISTS transactions (
+  id VARCHAR(255) PRIMARY KEY,
+  merchant_id VARCHAR(255) NOT NULL REFERENCES merchants(id),
+  amount INTEGER NOT NULL,
+  status VARCHAR(50) NOT NULL,
+  customer_email VARCHAR(255)
+);
