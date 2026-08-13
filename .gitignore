@@ -1,6 +1,13 @@
+# Utils
 node_modules/
 dist/
+
+# Environment
 .env
+.env.*
+!.env.example
+
+# Logs
 coverage/
 *.log
 .DS_Store

@@ -15,5 +15,22 @@ services:
       timeout: 5s
       retries: 5
 
+  postgres-test:
+    image: postgres:17-alpine
+    profiles: ["test"]
+    environment:
+      POSTGRES_USER: payflow_test
+      POSTGRES_PASSWORD: payflow_test
+      POSTGRES_DB: payflow_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payflow_test -d payflow_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
 volumes:
   payflow_postgres_data:
