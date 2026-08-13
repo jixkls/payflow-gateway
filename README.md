@@ -25,4 +25,4 @@ O PayFlow Gateway é uma API pequena para praticar desenvolvimento backend no do
 | `npm run lint`  | verifica o padrão do código             |
 | `npm test`      | executa os testes                       |
 
-Consulte [docs/SETUP.md](docs/SETUP.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GIT_FLOW.md](docs/GIT_FLOW.md) e [docs/INTERNSHIP.md](docs/INTERNSHIP.md).
+Consulte [docs/SETUP.md](docs/SETUP.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GIT_FLOW.md](docs/GIT_FLOW.md), [docs/INTERNSHIP.md](docs/INTERNSHIP.md) e o material da [Fase 2](training/phase-2/README.md).
