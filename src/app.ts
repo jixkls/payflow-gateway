@@ -1,6 +1,5 @@
 import express, { type Express } from "express";
 import type { Environment } from "./config/env.js";
-import { createTransactionSchema } from "./modules/transactions/transaction.js";
 import type { Pool } from "pg";
 import crypto from "node:crypto";
 
@@ -42,54 +41,93 @@ export function createApp({ env, database }: AppDependencies): Express {
 
   app.post("/transactions", async (request, response) => {
     const idempotencyKey = request.headers["idempotency-key"];
+    const { merchant_id, amount, customer_email } = request.body;
 
-    if (!idempotencyKey || typeof idempotencyKey !== "string") {
+    // 1. LOG DE INÍCIO: Registra a intenção sem expor dados sensíveis
+    console.info(
+      `[Transação] Iniciando processamento. Merchant ID: ${merchant_id || "N/A"}, Valor: ${amount}`,
+    );
+
+    // 2. VALIDAÇÕES DE NEGÓCIO (Fail-Fast)
+    if (!idempotencyKey) {
+      console.warn(
+        `[Transação] Falha na validação: Idempotency-Key ausente. Merchant: ${merchant_id}`,
+      );
       return response
         .status(400)
-        .json({ error: "O header 'idempotency-key' é obrigatório." });
+        .json({ error: "O header Idempotency-Key é obrigatório." });
+    }
+
+    if (!amount || amount <= 0) {
+      console.warn(
+        `[Transação] Falha na validação: Valor inválido (${amount}). Merchant: ${merchant_id}`,
+      );
+      return response
+        .status(400)
+        .json({ error: "O valor da transação deve ser maior que zero." });
     }
 
     try {
-      const payload = createTransactionSchema.parse(request.body);
+      const id = crypto.randomUUID();
 
-      const transactionId = crypto.randomUUID();
-
+      // [CORREÇÃO DE ERRO 1]: A tabela transactions exige que a coluna "status" seja NOT NULL.
+      // Adicionado o valor inicial 'PENDING' diretamente na query de inserção para evitar erro 23502.
       const insertQuery = `
         INSERT INTO transactions (id, merchant_id, amount, status, customer_email, idempotency_key)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES ($1, $2, $3, 'PENDING', $4, $5)
         RETURNING *;
       `;
 
       const result = (await database.query(insertQuery, [
-        transactionId,
-        payload.merchantId,
-        payload.amount,
-        "PENDING",
-        payload.customerEmail,
+        id,
+        merchant_id,
+        amount,
+        customer_email ?? null,
         idempotencyKey,
       ])) as { rows: unknown[] };
 
+      // 3. LOG DE SUCESSO
+      console.info(
+        `[Transação] Sucesso: Transação ${id} criada para o Merchant ${merchant_id}.`,
+      );
       return response.status(201).json(result.rows[0]);
-    } catch (error: unknown) {
-      const dbError = error as { code?: string };
+    } catch (err: unknown) {
+      const error = err as { code?: string; message?: string };
 
-      if (dbError.code === "23505") {
+      // [CORREÇÃO DE ERRO 2]: Tratamento controlado de erro do banco para Idempotência (código 23505 - unique_violation).
+      // Retorna 200 com a transação existente em vez de estourar erro 500.
+      if (error.code === "23505") {
+        console.info(
+          `[Transação] Idempotência ativada. Retornando transação existente para a chave informada.`,
+        );
         const selectQuery = `SELECT * FROM transactions WHERE idempotency_key = $1;`;
         const existingResult = (await database.query(selectQuery, [
           idempotencyKey,
         ])) as { rows: unknown[] };
-
-        if (existingResult.rows && existingResult.rows.length > 0) {
-          return response.status(200).json(existingResult.rows[0]);
-        }
+        return response.status(200).json(existingResult.rows[0]);
       }
 
-      if (dbError.code === "23503") {
-        return response.status(400).json({ error: "MerchantNotFoundError" });
+      // [CORREÇÃO DE ERRO 3]: Tratamento controlado de erro de Foreign Key (código 23503 - foreign_key_violation).
+      // Retorna 404 (Lojista não encontrado) em vez de retornar 500 ou vazar stack trace.
+      if (error.code === "23503") {
+        console.warn(
+          `[Transação] Falha estrutural: Tentativa de transação para Merchant inexistente (${merchant_id}).`,
+        );
+        return response
+          .status(404)
+          .json({ error: "Lojista (Merchant) não encontrado." });
       }
 
-      console.error(error);
-      return response.status(500).json({ error: "Erro interno no servidor." });
+      // [CORREÇÃO DE ERRO 4]: Tratamento de erros inesperados — registra o erro nos logs internos do servidor,
+      // mas retorna mensagem HTTP 500 genérica, sem expor detalhes internos da infraestrutura ao cliente.
+      console.error(
+        `[Transação] Erro inesperado ao processar transação. ` +
+          `Merchant: ${merchant_id}, Code: ${error.code ?? "N/A"}, Message: ${error.message ?? "N/A"}`,
+      );
+
+      return response.status(500).json({
+        error: "Ocorreu um erro interno no servidor ao processar a transação.",
+      });
     }
   });
 
@@ -117,7 +155,10 @@ export function createApp({ env, database }: AppDependencies): Express {
 
       return response.status(200).json(transaction);
     } catch (error: unknown) {
-      console.error(error);
+      const err = error as { code?: string; message?: string };
+      console.error(
+        `[Transação] Erro inesperado ao buscar transação. Code: ${err.code ?? "N/A"}, Message: ${err.message ?? "N/A"}`,
+      );
       return response.status(500).json({ error: "Erro interno no servidor." });
     }
   });
