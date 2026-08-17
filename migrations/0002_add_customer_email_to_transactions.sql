@@ -1,14 +1,2 @@
-CREATE TABLE IF NOT EXISTS merchants (
-  id VARCHAR(255) PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL,
-  active BOOLEAN DEFAULT true
-);
-
-CREATE TABLE IF NOT EXISTS transactions (
-  id VARCHAR(255) PRIMARY KEY,
-  merchant_id VARCHAR(255) NOT NULL REFERENCES merchants(id),
-  amount INTEGER NOT NULL,
-  status VARCHAR(50) NOT NULL,
-  customer_email VARCHAR(255)
-);
+ALTER TABLE transactions
+  ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255);
